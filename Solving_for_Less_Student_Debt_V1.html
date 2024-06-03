@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solving for Less Student Debt</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #f7f7f7;
+            display: flex;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        .main-content {
+            flex: 1;
+            padding: 20px;
+        }
+        .sidebar {
+            width: 300px;
+            position: sticky;
+            top: 0;
+            height: 150vh; /* Increased height */
+            background: #fff;
+            border-right: 1px solid #ccc;
+            padding: 20px;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+            overflow-y: auto; /* Added scrollbar */
+            overflow-x: hidden;
+        }
+        .section {
+            margin: 20px 0;
+        }
+        label {
+            display: block;
+            margin-bottom: 10px;
+        }
+        input, .slider {
+            width: calc(100% - 22px); /* Adjusting for padding */
+            padding: 10px;
+            margin-bottom: 5px;
+            box-sizing: border-box;
+        }
+        .slider-labels {
+            display: flex;
+            justify-content: space-between;
+            padding: 0 10px;
+        }
+        .total {
+            text-align: center;
+            font-size: 20px;
+            margin-top: 30px;
+        }
+        .disabled {
+            pointer-events: none;
+            opacity: 0.6;
+        }
+        .result {
+            background-color: lightblue;
+            padding: 5px;
+            border-radius: 5px;
+            display: inline-block;
+        }
+        .confetti {
+            position: fixed;
+            top: 0;
+            left: 50%;
+            width: 100%;
+            z-index: 9999;
+            pointer-events: none;
+        }
+        .confetti-piece {
+            width: 10px;
+            height: 10px;
+            background-color: #ff0;
+            position: absolute;
+            will-change: transform, opacity;
+            animation: confetti-fall 2s linear infinite;
+        }
+        @keyframes confetti-fall {
+            0% {
+                transform: translateY(0);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(100vh);
+                opacity: 0;
+            }
+        }
+        #income-modal {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 300px;
+            padding: 20px;
+            background: #fff;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            z-index: 10000;
+        }
+        #income-modal input {
+            width: calc(100% - 22px);
+            padding: 10px;
+            margin-bottom: 10px;
+            box-sizing: border-box;
+        }
+        #income-modal .close {
+            cursor: pointer;
+            position: absolute;
+            top: 10px;
+            right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <h2>Semester Summary</h2>
+        <div id="summary-part1">
+            <h3>Part I: Data Collection</h3>
+            <ol><p>Est. Financial Need: $<span id="summary-need" class="result">-</span></p>
+            <p>Est. Cost Before Using Student Loans: $<span id="summary-cost-before-loans" class="result">-</span></p></ol>
+        </div>
+        </br>
+        <div id="summary-part2">
+            <h3>Part II: Applying Student Loans</h3>
+            <ol><p>Selected Loan Amount: $<span id="summary-loan-amount" class="result">-</span></p>
+            <p>Est. Cost Net of Loans: $<span id="summary-cost-net-of-loans" class="result">-</span></p></ol>
+        </div>
+        </br>
+        <div id="summary-part3">
+            <h3>Part III: Add Living Expenses & Savings</h3>
+            <ol><p>Total Living Expenses: <span id="summary-total-living-expenses" class="result">-</span></p>
+            <p>Total Savings: <span id="summary-total-savings" class="result">-</span></p></ol>
+        </div>
+        </br>
+        <div id="summary-total-cost">
+            <h3>Total Out-of-Pocket Cost</h3>
+            <ol><p>Est. Cost Net of Loans + Living Expenses + Savings: $<span id="summary-total-cost-value" class="result">-</span></p></ol>
+        </div>
+        </br>
+        <div id="summary-part5">
+            <h3>Part IV: Applying Funding to Reduce Debt</h3>
+            <ol><p>Total Employment Income: $<span id="summary-total-employment-income" class="result">-</span></p>
+            <p>Total Family Support: $<span id="summary-total-family-support" class="result">-</span></p>
+            <p>Total Other Funding: $<span id="summary-total-other-funding" class="result">-</span></p></ol>
+        </div>
+        </br>
+        <div id="summary-deficit-surplus">
+            <h3>Deficit/Surplus</h3>
+            <ol><p>Deficit/Surplus for the Semester: $<span id="summary-deficit-surplus-value" class="result">-</span></p></ol>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <h1>Solve for Less Student Debt Before the Semester</h1>
+        </br>
+
+        <!-- Part I: Data Collection -->
+        <div class="section">
+            <h2>Part I: Data Collection</h2>
+            <small>Note: Provide us with some basic information about your existing financial aid package. The goal is to determine how much of your tuition bill will likely require loans to cover the remaining costs.</small>
+            </br></br>
+            <label for="semester-tuition">Tuition (Semester):</label>
+            <input type="number" id="semester-tuition" value="16000">
+            </br></br>
+            <label for="merit-scholarship">Merit Scholarship (Semester):</label>
+            <input type="number" id="merit-scholarship" placeholder="Enter your merit scholarship amount">
+            <b><p>Est. Financial Need (Semester): $<span id="need" class="result">-</span></p></b>
+            <small>Note: Your "Est. Financial Need" is normally calculated by subtracting your Merit Scholarship from your Tuition. This amount is then further reduced by grants and student loans, resulting in your out-of-pocket bill for the semester.</small>
+            </br></br></br>
+            <label for="pell">Pell (Semester):</label>
+            <input type="number" id="pell" placeholder="Enter your Pell amount granted">
+            </br></br>
+            <label for="tap">TAP (Semester):</label>
+            <input type="number" id="tap" placeholder="Enter TAP amount granted">
+            </br></br>
+            <b>😔Est. Cost Before Using Student Loans (Semester): $<span id="cost-before-loans" class="result">-</span></p></b>         <small>Note: Your "Estimated Cost Before Using Student Loans" is typically calculated by taking your "Estimated Financial Need" and subtracting your grants, which usually include your Pell Grant and TAP for the semester.</small>
+            </br></br></br>
+            <div><hr></div>
+        </div>
+        </br>
+
+        <!-- Part II: Loan Available Capacity -->
+        <div class="section">
+            <h2>Part II: Applying Student Loans</h2>
+            <small>Note: This section allows you to apply for as much in student loans as you'd like, up to the amount we have set for you. In this scenario, your student loan capacity is set to 75% of your "Est. Cost Before Using Student Loans" to reflect a real-life situation. In most cases, even opting for the full amount may not cover your entire college bill.</small>
+            </br></br></br>
+            <label for="loan-capacity">Loan Available Capacity:</label>
+            <input type="range" id="loan-capacity" class="slider" min="0" max="0" value="0">
+            <div class="slider-labels">
+            <span>$0</span><span id="loan-capacity-max">$0
+
+</span>
+            </div>
+            <p>Selected Loan Amount (Semester): $<span id="loan-amount" class="result">0</span></p>
+            <b><p>😡Est. Cost Net of Loans (Semester): $<span id="cost-net-of-loans" class="result">-</span></p></b>
+            <small>Note: Your "Est. Cost Net of Loans" represents the cost of your semester bill after applying merit scholarships, grants (such as Pell and TAP), and student loans.</small>
+        </br></br></br>
+        <div><hr></div>
+        </div>
+        </br>
+
+        <!-- Part III: Living Expenses & Savings Est. -->
+        <div class="section">
+            <h2>Part III: Add Living Expenses & Savings</h2>
+            <small>Note: This section is here to help you assess your estimated living expenses and savings for the school semester. You can add these costs and savings (money going out) to your "Est. Cost Net of Loans" if you choose to. To do so, enable the options by clicking on the checkboxes. Otherwise, you may move on to the next part.</small>
+            </br></br>
+            <input type="checkbox" id="enable-living-expenses"> Enable Living Expenses
+            </br></br></br>
+            <div id="living-expenses-section" class="disabled">
+                <label for="monthly-living-expenses">Est. Monthly Living Expenses (Semester):</label>
+                <input type="number" id="monthly-living-expenses" placeholder="Enter your monthly living expenses">
+                </br></br>
+                <label for="months-living-expenses">Est. Number of Months in the Semester:</label>
+                <input type="number" id="months-living-expenses" value="4">
+                </br></br>
+                <label for="living-expenses-slider">Adjust your Est. Living Expenses:</label>
+                <input type="range" id="living-expenses-slider" class="slider" min="0" max="2000" value="1000">
+                <div class="slider-labels">
+                    <span>$0</span><span>$2,000</span>
+                </div>
+                <p>Est. Total Living Expenses for the Semester: $<span id="total-living-expenses" class="result">-</span></p>
+                <p>Need help estimating your living expenses for the semester? <a href="https://fcosorio123.github.io/Living_Expense_Estimator_For_College_V7/Living_Expense_Estimator_V7.html" target="_blank">Click here</a>.</p>
+            </div>
+        </br>
+        <div><hr></div>
+        </div>
+        <div class="section">
+            <input type="checkbox" id="enable-savings"> Enable Savings
+            <div id="savings-section" class="disabled">
+            </br></br>
+                <label for="monthly-savings">Est. Monthly Savings (Semester):</label>
+                <input type="number" id="monthly-savings" placeholder="Enter your monthly savings">
+                </br></br>
+                <label for="months-savings">Est. Number of Months in the Semester:</label>
+                <input type="number" id="months-savings" value="4">
+                </br></br>
+                <label for="savings-slider">Adjust Savings:</label>
+                <input type="range" id="savings-slider" class="slider" min="0" max="2000" value="1000">
+                <div class="slider-labels">
+                    <span>$0</span><span>$2,000</span>
+                </div>
+                <p>Est. Total Savings for the Semester: $<span id="total-savings" class="result">-</span></p>
+            </div>
+        </div>
+        </br>
+        <b><p>😡😡Est. Cost Net of Loans + Living Expenses + Savings (Semester): $<span id="total-cost" class="result">-</span></p></b>
+        <small>Note: This is your "Est. Cost Net of Loans" after adding your living expenses and savings for the semester.</small>
+        </br></br>
+        <div><hr></div>
+        </br>
+
+        <!-- Part IV: Additional Funding Sources -->
+        <div class="section">
+            <h2>Part IV: Apply Funding to Reduce Debt</h2>
+            <small>Note: In this section, you'll apply all sources of funding you can obtain to reduce the amount of debt you are using.</small>
+            </br></br>
+            <input type="checkbox" id="enable-funding"> Enable Additional Funding Sources
+            </br></br></br>
+
+            <div id="funding-section" class="disabled">
+                <label for="employment-income">Add Monthly Employment Income (Semester):</label>
+                <input type="number" id="employment-income" placeholder="Enter employment income" value="0">
+                </br></br>
+                <label for="employment-months">Est. Number of Months in the Semester:</label>
+                <input type="number" id="employment-months" value="4">
+                <input type="range" id="employment-income-slider" class="slider" min="0" max="2000" value="0">
+                <div class="slider-labels">
+                    <span>$0</span><span>$2,000</span>
+                </div>
+                <p>Est. Total Employment Income for the Semester: $<span id="total-employment-income" class="result">-</span></p>
+                <p>Need help estimating your employment income for the semester? <a href="#" id="open-modal">Click here</a>.</p>
+                </br>
+                <div><hr></div>
+                </br></br>
+
+                <label for="family-support">Add Monthly Family & Friends Support (Semester):</label>
+                <input type="number" id="family-support" placeholder="Enter family support amount" value="0">
+                </br></br>
+                <label for="family-months">Est. Number of Months in the Semester:</label>
+                <input type="number" id="family-months" value="4">
+                <input type="range" id="family-support-slider" class="slider" min="0" max="2000" value="0">
+                <div class="slider-labels">
+                    <span>$0</span><span>$2,000</span>
+                </div>
+                <p>Est. Total Family Support for the Semester: $<span id="total-family-support" class="result">-</span></p>
+                </br>
+                <div><hr></div>
+                </br></br>
+
+                <label for="other-funding">Add Other Monthly Funding (Semester):</label>
+                <input type="number" id="other-funding" placeholder="Enter other funding amount" value="0">
+                </br></br>
+                <label for="other-months">Number of Months:</label>
+                <input type="number" id="other-months" value="4">
+                <input type="range" id="other-funding-slider" class="slider" min="0" max="2000" value="0">
+                <div class="slider-labels">
+                    <span>$0</span><span>$2,000</span>
+                </div>
+                <p>Est. Total Other Funding for the Semester: $<span id="total-other-funding" class="result">-</span></p>
+            </div>
+           
+            <h1><p>Deficit/Surplus for the Semester: <span id="deficit-surplus" class="result">-</span></p></h1>
+        </div>
+    </div>
+
+    <!-- Employment Income Modal -->
+    <div id="income-modal">
+        <span class="close" id="close-modal">&times;</span>
+        <h2>Estimate Your Employment Income</h2>
+        <label for="start-date">Start Date:</label>
+        <input type="date" id="start-date" value="2024-09-15">
+        <label for="end-date">End Date:</label>
+        <input type="date" id="end-date" value="2024-12-15">
+        <label for="hourly-rate">Hourly Rate:</label>
+        <input type="number" id="hourly-rate" placeholder="$ per Hour">
+        <label for="hours-per-week">Hours/Week:</label>
+        <input type="number" id="hours-per-week" placeholder="Hours per Week">
+        <button id="calculate-compensation">Calculate</button>
+        <p>Estimated Total Compensation: $<span id="estimated-compensation">0</span></p>
+        <button id="save-income">Save</button>
+    </div>
+
+    <script>
+        document.getElementById('merit-scholarship').addEventListener('input', updateNeed);
+        document.getElementById('pell').addEventListener('input', updateCostBeforeLoans);
+        document.getElementById('tap').addEventListener('input', updateCostBeforeLoans);
+        document.getElementById('loan-capacity').addEventListener('input', updateCostNetOfLoans);
+        document.getElementById('enable-living-expenses').addEventListener('change', toggleLivingExpenses);
+        document.getElementById('enable-savings').addEventListener('change', toggleSavings);
+        document.getElementById('monthly-living-expenses').addEventListener('input', updateLivingExpensesFromInput);
+        document.getElementById('months-living-expenses').addEventListener('input', updateTotalLivingExpenses);
+        document.getElementById('living-expenses-slider').addEventListener('input', updateLivingExpensesFromSlider);
+        document.getElementById('monthly-savings').addEventListener('input', updateSavingsFromInput);
+        document.getElementById('months-savings').addEventListener('input', updateTotalSavings);
+        document.getElementById('savings-slider').addEventListener('input', updateSavingsFromSlider);
+        document.getElementById('enable-funding').addEventListener('change', toggleFunding);
+        document.getElementById('employment-income').addEventListener('input', updateFundingFromInput);
+        document.getElementById('employment-income-slider').addEventListener('input', updateFundingFromSlider);
+        document.getElementById('employment-months').addEventListener('input', updateTotalFunding);
+        document.getElementById('family-support').addEventListener('input', updateFundingFromInput);
+        document.getElementById('family-support-slider').addEventListener('input', updateFundingFromSlider);
+        document.getElementById('family-months').addEventListener('input', updateTotalFunding);
+        document.getElementById('other-funding').addEventListener('input', updateFundingFromInput);
+        document.getElementById('other-funding-slider').addEventListener('input', updateFundingFromSlider);
+        document.getElementById('other-months').addEventListener('input', updateTotalFunding);
+
+        document.getElementById('open-modal').addEventListener('click', () => {
+            document.getElementById('income-modal').style.display = 'block';
+        });
+
+        document.getElementById('close-modal').addEventListener('click', () => {
+            document.getElementById('income-modal').style.display = 'none';
+        });
+
+        document.getElementById('calculate-compensation').addEventListener('click', () => {
+            const hourlyRate = parseFloat(document.getElementById('hourly-rate').value || 0);
+            const hoursPerWeek = parseFloat(document.getElementById('hours-per-week').value || 0);
+            const startDate = new Date(document.getElementById('start-date').value);
+            const endDate = new Date(document.getElementById('end-date').value);
+            const weeks = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24 * 7));
+            const totalCompensation = hourlyRate * hoursPerWeek * weeks;
+            document.getElementById('estimated-compensation').innerText = totalCompensation.toFixed(2);
+        });
+
+        document.getElementById('save-income').addEventListener('click', () => {
+            const totalCompensation = parseFloat(document.getElementById('estimated-compensation').innerText || 0);
+            const weeks = Math.ceil((new Date(document.getElementById('end-date').value) - new Date(document.getElementById('start-date').value)) / (1000 * 60 * 60 * 24 * 7));
+            document.getElementById('employment-income').value = (totalCompensation / weeks / 4).toFixed(2);
+            document.getElementById('employment-income-slider').value = (totalCompensation / weeks / 4).toFixed(2);
+            updateTotalFunding();
+
+            document.getElementById('income-modal').style.display = 'none';
+        });
+
+        function updateNeed() {
+            const tuition = parseFloat(document.getElementById('semester-tuition').value.replace(/,/g, ''));
+            const merit = parseFloat(document.getElementById('merit-scholarship').value.replace(/,/g, '') || 0);
+            const need = tuition - merit;
+            document.getElementById('need').innerText = `$${need.toLocaleString()}`;
+            document.getElementById('summary-need').innerText = `$${need.toLocaleString()}`;
+            updateCostBeforeLoans();
+        }
+
+        function updateCostBeforeLoans() {
+            const need = parseFloat(document.getElementById('need').innerText.replace(/[^0-9.-]+/g, "") || 0);
+            const pell = parseFloat(document.getElementById('pell').value.replace(/,/g, '') || 0);
+            const tap = parseFloat(document.getElementById('tap').value.replace(/,/g, '') || 0);
+            const costBeforeLoans = need - pell - tap;
+            document.getElementById('cost-before-loans').innerText = `$${costBeforeLoans.toLocaleString()}`;
+            document.getElementById('summary-cost-before-loans').innerText = `$${costBeforeLoans.toLocaleString()}`;
+            updateLoanCapacity(costBeforeLoans);
+        }
+
+        function updateLoanCapacity(costBeforeLoans) {
+            const maxLoan = costBeforeLoans * 0.75;
+            document.getElementById('loan-capacity').max = maxLoan;
+            document.getElementById('loan-capacity-max').innerText = `$${maxLoan.toLocaleString()}`;
+            updateCostNetOfLoans();
+        }
+
+        function updateCostNetOfLoans() {
+            const costBeforeLoans = parseFloat(document.getElementById('cost-before-loans').innerText.replace(/[^0-9.-]+/g, "") || 0);
+            const loanCapacity = parseFloat(document.getElementById('loan-capacity').value || 0);
+            const costNetOfLoans = costBeforeLoans - loanCapacity;
+            document.getElementById('cost-net-of-loans').innerText = `$${costNetOfLoans.toLocaleString()}`;
+            document.getElementById('loan-amount').innerText = loanCapacity.toLocaleString();
+            document.getElementById('summary-loan-amount').innerText = `$${loanCapacity.toLocaleString()}`;
+            document.getElementById('summary-cost-net-of-loans').innerText = `$${costNetOfLoans.toLocaleString()}`;
+            updateTotalCost();
+        }
+
+        function toggleLivingExpenses() {
+            const isChecked = document.getElementById('enable-living-expenses').checked;
+            document.getElementById('living-expenses-section').classList.toggle('disabled', !isChecked);
+            updateTotalLivingExpenses();
+        }
+
+        function toggleSavings() {
+            const isChecked = document.getElementById('enable-savings').checked;
+            document.getElementById('savings-section').classList.toggle('disabled', !isChecked);
+            updateTotalSavings();
+        }
+
+        function toggleFunding() {
+            const isChecked = document.getElementById('enable-funding').checked;
+            document.getElementById('funding-section').classList.toggle('disabled', !isChecked);
+            updateTotalFunding();
+        }
+
+        function updateLivingExpensesFromInput() {
+            document.getElementById('living-expenses-slider').value = document.getElementById('monthly-living-expenses').value;
+            updateTotalLivingExpenses();
+        }
+
+        function updateLivingExpensesFromSlider() {
+            document.getElementById('monthly-living-expenses').value = document.getElementById('living-expenses-slider').value;
+            updateTotalLivingExpenses();
+        }
+
+        function updateTotalLivingExpenses() {
+            if (document.getElementById('enable-living-expenses').checked) {
+                const monthly = parseFloat(document.getElementById('monthly-living-expenses').value.replace(/,/g, '') || 0);
+                const months = parseInt(document.getElementById('months-living-expenses').value.replace(/,/g, '') || 0);
+                const total = monthly * months;
+                document.getElementById('total-living-expenses').innerText = `$${total.toLocaleString()}`;
+                document.getElementById('summary-total-living-expenses').innerText = `$${total.toLocaleString()}`;
+            } else {
+                document.getElementById('total-living-expenses').innerText = `-`;
+                document.getElementById('summary-total-living-expenses').innerText = `-`;
+            }
+            updateTotalCost();
+        }
+
+        function updateSavingsFromInput() {
+            document.getElementById('savings-slider').value = document.getElementById('monthly-savings').value;
+            updateTotalSavings();
+        }
+
+        function updateSavingsFromSlider() {
+            document.getElementById('monthly-savings').value = document.getElementById('savings-slider').value;
+            updateTotalSavings();
+        }
+
+        function updateTotalSavings() {
+            if (document.getElementById('enable-savings').checked) {
+                const monthly = parseFloat(document.getElementById('monthly-savings').value.replace(/,/g, '') || 0);
+                const months = parseInt(document.getElementById('months-savings').value.replace(/,/g, '') || 0);
+                const total = monthly * months;
+                document.getElementById('total-savings').innerText = `$${total.toLocaleString()}`;
+                document.getElementById('summary-total-savings').innerText = `$${total.toLocaleString()}`;
+            } else {
+                document.getElementById('total-savings').innerText = `-`;
+                document.getElementById('summary-total-savings').innerText = `-`;
+            }
+            updateTotalCost();
+        }
+
+        function updateTotalCost() {
+            const costNetOfLoans = parseFloat(document.getElementById('cost-net-of-loans').innerText.replace(/[^0-9.-]+/g, "") || 0);
+
+
+            const totalLivingExpenses = parseFloat(document.getElementById('total-living-expenses').innerText.replace(/[^0-9.-]+/g, "") || 0);
+            const totalSavings = parseFloat(document.getElementById('total-savings').innerText.replace(/[^0-9.-]+/g, "") || 0);
+            const totalCost = costNetOfLoans + (totalLivingExpenses || 0) + (totalSavings || 0);
+            document.getElementById('total-cost').innerText = `$${totalCost.toLocaleString()}`;
+            document.getElementById('summary-total-cost-value').innerText = `$${totalCost.toLocaleString()}`;
+            updateDeficitSurplus();
+        }
+
+        function updateFundingFromInput() {
+            updateTotalFunding();
+        }
+
+        function updateFundingFromSlider() {
+            document.getElementById('employment-income').value = document.getElementById('employment-income-slider').value;
+            document.getElementById('family-support').value = document.getElementById('family-support-slider').value;
+            document.getElementById('other-funding').value = document.getElementById('other-funding-slider').value;
+            updateTotalFunding();
+        }
+
+        function updateTotalFunding() {
+            if (document.getElementById('enable-funding').checked) {
+                const employmentIncome = parseFloat(document.getElementById('employment-income').value.replace(/,/g, '') || 0);
+                const employmentMonths = parseInt(document.getElementById('employment-months').value.replace(/,/g, '') || 0);
+                const totalEmploymentIncome = employmentIncome * employmentMonths;
+                document.getElementById('total-employment-income').innerText = `$${totalEmploymentIncome.toLocaleString()}`;
+                document.getElementById('summary-total-employment-income').innerText = `$${totalEmploymentIncome.toLocaleString()}`;
+
+                const familySupport = parseFloat(document.getElementById('family-support').value.replace(/,/g, '') || 0);
+                const familyMonths = parseInt(document.getElementById('family-months').value.replace(/,/g, '') || 0);
+                const totalFamilySupport = familySupport * familyMonths;
+                document.getElementById('total-family-support').innerText = `$${totalFamilySupport.toLocaleString()}`;
+                document.getElementById('summary-total-family-support').innerText = `$${totalFamilySupport.toLocaleString()}`;
+
+                const otherFunding = parseFloat(document.getElementById('other-funding').value.replace(/,/g, '') || 0);
+                const otherMonths = parseInt(document.getElementById('other-months').value.replace(/,/g, '') || 0);
+                const totalOtherFunding = otherFunding * otherMonths;
+                document.getElementById('total-other-funding').innerText = `$${totalOtherFunding.toLocaleString()}`;
+                document.getElementById('summary-total-other-funding').innerText = `$${totalOtherFunding.toLocaleString()}`;
+
+                const totalFunding = totalEmploymentIncome + totalFamilySupport + totalOtherFunding;
+                updateDeficitSurplus(totalFunding);
+            } else {
+                document.getElementById('total-employment-income').innerText = `-`;
+                document.getElementById('summary-total-employment-income').innerText = `-`;
+                document.getElementById('total-family-support').innerText = `-`;
+                document.getElementById('summary-total-family-support').innerText = `-`;
+                document.getElementById('total-other-funding').innerText = `-`;
+                document.getElementById('summary-total-other-funding').innerText = `-`;
+                updateDeficitSurplus(0);
+            }
+        }
+
+        function updateDeficitSurplus(totalFunding = 0) {
+            const totalCost = parseFloat(document.getElementById('total-cost').innerText.replace(/[^0-9.-]+/g, "") || 0);
+            const deficitSurplus = totalFunding - totalCost;
+            const deficitSurplusElement = document.getElementById('deficit-surplus');
+            const summaryDeficitSurplusElement = document.getElementById('summary-deficit-surplus-value');
+            deficitSurplusElement.innerText = `$${Math.abs(deficitSurplus).toLocaleString()}`;
+            summaryDeficitSurplusElement.innerText = `$${Math.abs(deficitSurplus).toLocaleString()}`;
+            deficitSurplusElement.style.color = deficitSurplus >= 0 ? 'green' : 'red';
+            summaryDeficitSurplusElement.style.color = deficitSurplus >= 0 ? 'green' : 'red';
+            if (deficitSurplus > 0) {
+                showConfetti();
+            }
+        }
+
+        function showConfetti() {
+            const confettiContainer = document.createElement('div');
+            confettiContainer.className = 'confetti';
+            document.body.appendChild(confettiContainer);
+
+            for (let i = 0; i < 100; i++) {
+                const confettiPiece = document.createElement('div');
+                confettiPiece.className = 'confetti-piece';
+                confettiPiece.style.left = Math.random() * 100 + 'vw';
+                confettiPiece.style.backgroundColor = `hsl(${Math.random() * 360}, 100%, 50%)`;
+                confettiContainer.appendChild(confettiPiece);
+
+                confettiPiece.style.animationDelay = `${Math.random() * 2}s`;
+                confettiPiece.style.opacity = Math.random();
+                confettiPiece.style.transform = `translateY(${Math.random() * -200}vh) rotate(${Math.random() * 360}deg)`;
+            }
+
+            setTimeout(() => {
+                document.body.removeChild(confettiContainer);
+            }, 5000);
+        }
+    </script>
+</body>
+</html>
